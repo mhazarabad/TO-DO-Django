@@ -1,0 +1,9 @@
+django>=4
+psycopg2-binary
+pytz
+gunicorn
+requests
+boto3
+pillow
+pypng
+persiantools
