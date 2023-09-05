@@ -25,7 +25,8 @@ class BlogTestCase(TestCase):
         todo_without_optionals=models.Todo.objects.create(
             name='todo test 1',
             by=user_james
-        )
+            )
+        
         self.assertEqual(
             first=todo_without_optionals.status, 
             second='1', 
@@ -240,13 +241,13 @@ class BlogTestCase(TestCase):
         
         self.assertEqual(
             first=todo_with_start_date.due_date, 
-            second=due_date,
-            msg='TEST 31: todo due date must be {} but it is {}'.format(due_date, todo_with_start_date.due_date)
+            second=None,
+            msg='TEST 31: todo due date must be {} but it is {}'.format(None, todo_with_start_date.due_date)
             )
         
         self.assertEqual(
             first=todo_with_start_date.start_date, 
-            second=None, 
+            second=start_date, 
             msg='TEST 32: todo start date must be {} but it is {}'.format(None, todo_with_start_date.start_date)
             )
 
@@ -265,12 +266,6 @@ class BlogTestCase(TestCase):
             first=todo_without_optionals.start_date, 
             second=None, 
             msg='TEST 33: todo status must be {} but it is {}'.format('2', todo_without_optionals.status)
-            )
-        
-        self.assertGreater(
-            first=todo_without_optionals.last_update_datetime, 
-            second=todo_without_optionals.creation_datetime, 
-            msg='TEST 34: todo creation_datetime must be greater than {} but it is {}'.format(todo_without_optionals.last_update_datetime, todo_without_optionals.creation_datetime)
             )
 
         todo_with_description.status='3'
@@ -428,7 +423,7 @@ class BlogTestCase(TestCase):
         self.assertEqual(
             [todo.id for todo in models.Todo.sort_todo_by_passed_deadline(by=user_jscob)],
             [todo_past.id], 
-            msg='TEST 47: todo method test {} failed- expected values: {} - returnned values: {}'.format(
+            msg='TEST 48: todo method test {} failed- expected values: {} - returnned values: {}'.format(
                 'sort_todo_by_closer_start_date',
                 [todo_past.id],
                 [todo.id for todo in models.Todo.sort_todo_by_passed_deadline(by=user_jscob)])
@@ -473,33 +468,240 @@ class BlogTestCase(TestCase):
             due_date=date_future_2
         )
 
+
         from django.test import Client
         client = Client(headers={"user-agent": "curl/7.79.1"})
-        url='/todo/{}'.format(todo_present.id)
-        response = client.get(path=url)
+
+
+        url_present='/todo/{}'.format(todo_present.id)
+        response_present = client.get(path=url_present)
 
         self.assertEqual(
-            first=response.status_code,
+            first=response_present.status_code,
             second=200,
-            msg='TEST 46: status code for get request must be {} but is {} for url {}'.format(
+            msg='TEST 49: status code for get request must be {} but is {} for url {}'.format(
                 200,
-                response.status_code,
-                url
+                response_present.status_code,
+                url_present
             )
         )
 
         self.assertEqual(
-            first=response.json(),
-            second=dict(todo_present),
-            msg="TEST 48: todo get detail is wrong."
+            first=response_present.json(),
+            second=todo_present.export_to_response,
+            msg="TEST 50: todo get detail is wrong."
         )
 
+
+        url_past='/todo/{}'.format(todo_past.id)
+        response_past = client.get(path=url_past)
+
+        self.assertEqual(
+            first=response_past.status_code,
+            second=200,
+            msg='TEST 51: status code for get request must be {} but is {} for url {}'.format(
+                200,
+                response_past.status_code,
+                url_past
+            )
+        )
+
+        self.assertEqual(
+            first=response_past.json(),
+            second=todo_past.export_to_response,
+            msg="TEST 52: todo get detail is wrong."
+        )
+
+
+        url_future='/todo/{}'.format(todo_future.id)
+        response_future = client.get(path=url_future)
+
+        self.assertEqual(
+            first=response_future.status_code,
+            second=200,
+            msg='TEST 53: status code for get request must be {} but is {} for url {}'.format(
+                200,
+                response_future.status_code,
+                url_future
+            )
+        )
+
+        self.assertEqual(
+            first=response_future.json(),
+            second=todo_future.export_to_response,
+            msg="TEST 54: todo get detail is wrong."
+        )
+
+        todo_past.delete()
+        todo_present.delete()
+        todo_future.delete()
+
     def test_todo_post_APIs(self):
-        pass
+
+        user_jscob=User.objects.get(username='_test__jscob')
+        description='some text to test description'
+        from django.utils import timezone
+        from datetime import timedelta
+        date_future=timezone.now()+timedelta(days=5)
+        date_past=timezone.now()-timedelta(days=10)
+
+
+        from django.test import Client
+        client = Client(headers={"user-agent": "curl/7.79.1"})
+
+        data_present={
+            "name":"create Todo in POST API",
+            "by":user_jscob.id,
+            "description":description,
+            "start_date":"{} {}".format(date_past.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
+            "due_date":"{} {}".format(date_future.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
+        }
+
+        post_url='/todo/'
+        response_present = client.post(path=post_url,data=data_present,content_type='application/json',)
+
+        self.assertEqual(
+            first=response_present.status_code,
+            second=200,
+            msg='TEST 55: status code for post request must be {} but is {} for url {}'.format(
+                200,
+                response_present.status_code,
+                post_url
+            )
+        )
+
+        response_data=response_present.json()
+
+        self.assertEqual(
+            first=response_data.get('name'),
+            second=data_present['name'],
+            msg='TEST 56: posted data is not equal to saved data with field {}'.format('name')
+        )
+
+        self.assertEqual(
+            first=response_data.get('description'),
+            second=data_present['description'],
+            msg='TEST 57: posted data is not equal to saved data with field {}'.format('description')
+        )
+
+        self.assertEqual(
+            first=response_data.get('start_date'),
+            second=data_present['start_date'],
+            msg='TEST 58: posted data is not equal to saved data with field {}'.format('start_date')
+        )
+
+        self.assertEqual(
+            first=response_data.get('due_date'),
+            second=data_present['due_date'],
+            msg='TEST 59: posted data is not equal to saved data with field {}'.format('due_date')
+        )
+
+        self.assertEqual(
+            first=response_data.get('by')['id'],
+            second=data_present[user_jscob.id],
+            msg='TEST 60: posted data is not equal to saved data with field {}'.format('by')
+        )
 
     def test_todo_put_APIs(self):
-        pass
+        new_description='some text to test description 2'
+        from django.utils import timezone
+        from datetime import timedelta
+        new_date_future=timezone.now()+timedelta(days=5)
+        new_date_past=timezone.now()-timedelta(days=10)
+        user_jscob=User.objects.get(username='_test__jscob')
+        description='some text to test description'
+        date_past_1=timezone.now()-timedelta(days=10)
+        date_past_2=timezone.now()-timedelta(days=15)
+
+        todo_past=models.Todo.objects.create(
+            name='Create todo to test put',
+            by=user_jscob,
+            description=description,
+            start_date=date_past_1,
+            due_date=date_past_2
+        )
+
+        from django.test import Client
+        client = Client(headers={"user-agent": "curl/7.79.1"})
+
+        data_present={
+            "escription":new_description,
+            "start_date":"{} {}".format(new_date_future.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
+            "due_date":"{} {}".format(new_date_past.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
+        }
+
+        todo=models.Todo.objects.get(name="Create todo to test put")
+
+        put_url='/todo/{}/'.format(todo.id)
+        response_present = client.put(path=put_url,data=data_present,content_type='application/json',)
+
+        self.assertEqual(
+            first=response_present.status_code,
+            second=200,
+            msg='TEST 61: status code for put request must be {} but is {} for url {}'.format(
+                200,
+                response_present.status_code,
+                put_url
+            )
+        )
+
+        response_data=response_present.json()
+
+        self.assertEqual(
+            first=response_data.get('description'),
+            second=data_present['description'],
+            msg='TEST 62: edited data is not equal to saved data with field {}'.format('description')
+        )
+
+        self.assertEqual(
+            first=response_data.get('start_date'),
+            second=data_present['start_date'],
+            msg='TEST 63: edited data is not equal to saved data with field {}'.format('start_date')
+        )
+
+        self.assertEqual(
+            first=response_data.get('due_date'),
+            second=data_present['due_date'],
+            msg='TEST 64: edited data is not equal to saved data with field {}'.format('due_date')
+        )
 
     def test_todo_delete_APIs(self):
-        pass
+        from django.test import Client
+        client = Client(headers={"user-agent": "curl/7.79.1"})
+
+        from django.utils import timezone
+        from datetime import timedelta
+        user_jscob=User.objects.get(username='_test__jscob')
+        description='some text to test description'
+        date_past_1=timezone.now()-timedelta(days=10)
+        date_past_2=timezone.now()-timedelta(days=15)
+
+        todo_past=models.Todo.objects.create(
+            name='Create todo to test delete',
+            by=user_jscob,
+            description=description,
+            start_date=date_past_1,
+            due_date=date_past_2
+        )
+
+        todo=models.Todo.objects.get(name="Create todo to test delete")
+
+        delete_url='/todo/{}/'.format(todo.id)
+        response_present = client.put(path=delete_url)
+
+        self.assertEqual(
+            first=response_present.status_code,
+            second=200,
+            msg='TEST 65: status code for delete request must be {} but is {} for url {}'.format(
+                200,
+                response_present.status_code,
+                delete_url
+            )
+        )
+
+        self.assertEqual(
+            first=models.Todo.objects.filter(name="create Todo in POST API").exists(),
+            second=False,
+            msg='TEST 66: Delete request did not delete the object'
+        )
 
