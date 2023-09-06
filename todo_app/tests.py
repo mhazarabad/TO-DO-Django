@@ -1,30 +1,15 @@
 from django.test import TestCase
 from . import models
-from django.contrib.auth.models import User
 
 class BlogTestCase(TestCase):
     def setUp(self):
-        user_james=User.objects.create(
-            first_name='jsmes',
-            username='_test__james',
-            password='_'
-        )
-
-        user_jscob=User.objects.create(
-            first_name='jscob',
-            username='_test__jscob',
-            password='_'
-        )
+        pass
 
     def test_create_edit_delete_todo(self):
-
-        user_james=User.objects.get(username='_test__james')
-        user_jscob=User.objects.get(username='_test__jscob')
 
 
         todo_without_optionals=models.Todo.objects.create(
             name='todo test 1',
-            by=user_james
             )
         
         self.assertEqual(
@@ -52,12 +37,6 @@ class BlogTestCase(TestCase):
             )
         
         self.assertEqual(
-            first=todo_without_optionals.by.id, 
-            second=user_james.id,
-            msg='TEST 5: todo by must be {} but it is {}'.format(user_james.id,todo_without_optionals.by.id)
-            )
-        
-        self.assertEqual(
             first=todo_without_optionals.description, 
             second=None, 
             msg='TEST 6: todo description must be {} but it is {}'.format(None,todo_without_optionals.description)
@@ -80,7 +59,6 @@ class BlogTestCase(TestCase):
 
         todo_with_description=models.Todo.objects.create(
             name='todo test 2',
-            by=user_jscob,
             description=description
         )
 
@@ -109,12 +87,6 @@ class BlogTestCase(TestCase):
             )
         
         self.assertEqual(
-            first=todo_with_description.by.id, 
-            second=user_jscob.id,
-            msg='TEST 13: todo by must be {} but it is {}'.format(user_jscob.id,todo_with_description.by.id)
-            )
-        
-        self.assertEqual(
             first=todo_with_description.description, 
             second=description, 
             msg='TEST 14: todo description must be {} but it is {}'.format(description,todo_with_description.description)
@@ -138,7 +110,6 @@ class BlogTestCase(TestCase):
         
         todo_with_due_date=models.Todo.objects.create(
             name='todo test 3',
-            by=user_james,
             status='2',
             description=description,
             due_date=due_date
@@ -167,12 +138,6 @@ class BlogTestCase(TestCase):
             second=None, 
             msg='TEST 20: creation date time must be filled automatically but it is None'
             )
-        
-        self.assertEqual(
-            first=todo_with_due_date.by.id, 
-            second=user_james.id,
-            msg='TEST 21: todo by must be {} but it is {}'.format(user_james.id,todo_with_due_date.by.id)
-            )
 
         self.assertEqual(
             first=todo_with_due_date.description, 
@@ -197,7 +162,6 @@ class BlogTestCase(TestCase):
 
         todo_with_start_date=models.Todo.objects.create(
             name='todo test 4',
-            by=user_jscob,
             status='3',
             description=description,
             start_date=start_date
@@ -225,12 +189,6 @@ class BlogTestCase(TestCase):
             first=todo_with_start_date.creation_datetime, 
             second=None, 
             msg='TEST 28: creation date time must be filled automatically but it is None'
-            )
-        
-        self.assertEqual(
-            first=todo_with_start_date.by.id, 
-            second=user_jscob.id,
-            msg='TEST 29: todo by must be {} but it is {}'.format(user_jscob.id,todo_with_start_date.by.id)
             )
 
         self.assertEqual(
@@ -362,7 +320,6 @@ class BlogTestCase(TestCase):
             )
 
     def test_todo_methods(self):
-        user_jscob=User.objects.get(username='_test__jscob')
         description='some text to test description'
         from django.utils import timezone
         from datetime import timedelta
@@ -374,7 +331,6 @@ class BlogTestCase(TestCase):
 
         todo_past=models.Todo.objects.create(
             name='todo test past',
-            by=user_jscob,
             description=description,
             start_date=date_past_1,
             due_date=date_past_2
@@ -382,7 +338,6 @@ class BlogTestCase(TestCase):
 
         todo_present=models.Todo.objects.create(
             name='todo test present',
-            by=user_jscob,
             description=description,
             start_date=date_now,
             due_date=date_future_1
@@ -390,7 +345,6 @@ class BlogTestCase(TestCase):
 
         todo_future=models.Todo.objects.create(
             name='todo test future',
-            by=user_jscob,
             description=description,
             start_date=date_future_1,
             due_date=date_future_2
@@ -399,34 +353,34 @@ class BlogTestCase(TestCase):
         #### test sort_todo_by_closer_due_date
 
         self.assertEqual(
-            [todo.id for todo in models.Todo.sort_todo_by_closer_due_date(by=user_jscob)],
+            [todo.id for todo in models.Todo.sort_todo_by_closer_due_date()],
             [todo_past.id,todo_present.id,todo_future.id], 
             msg='TEST 46: todo method test {} failed- expected values: {} - returnned values: {}'.format(
                 'sort_todo_by_closer_due_date',
                 [todo_past.id,todo_present.id,todo_future.id],
-                [todo.id for todo in models.Todo.sort_todo_by_closer_due_date(by=user_jscob)])
+                [todo.id for todo in models.Todo.sort_todo_by_closer_due_date()])
         )
 
         #### test sort_todo_by_closer_start_date
 
         self.assertEqual(
-            [todo.id for todo in models.Todo.sort_todo_by_closer_start_date(by=user_jscob)],
+            [todo.id for todo in models.Todo.sort_todo_by_closer_start_date()],
             [todo_past.id,todo_present.id,todo_future.id], 
             msg='TEST 47: todo method test {} failed- expected values: {} - returnned values: {}'.format(
                 'sort_todo_by_closer_start_date',
                 [todo_past.id,todo_present.id,todo_future.id],
-                [todo.id for todo in models.Todo.sort_todo_by_closer_start_date(by=user_jscob)])
+                [todo.id for todo in models.Todo.sort_todo_by_closer_start_date()])
         )
 
         #### test sort_todo_by_passed_deadline
 
         self.assertEqual(
-            [todo.id for todo in models.Todo.sort_todo_by_passed_deadline(by=user_jscob)],
+            [todo.id for todo in models.Todo.sort_todo_by_passed_deadline()],
             [todo_past.id], 
             msg='TEST 48: todo method test {} failed- expected values: {} - returnned values: {}'.format(
                 'sort_todo_by_closer_start_date',
                 [todo_past.id],
-                [todo.id for todo in models.Todo.sort_todo_by_passed_deadline(by=user_jscob)])
+                [todo.id for todo in models.Todo.sort_todo_by_passed_deadline()])
         )
 
         todo_past.delete()
@@ -434,7 +388,6 @@ class BlogTestCase(TestCase):
         todo_future.delete()
 
     def test_todo_get_APIs(self):
-        user_jscob=User.objects.get(username='_test__jscob')
         description='some text to test description'
         from django.utils import timezone
         from datetime import timedelta
@@ -446,34 +399,31 @@ class BlogTestCase(TestCase):
 
         todo_past=models.Todo.objects.create(
             name='todo test past',
-            by=user_jscob,
             description=description,
             start_date=date_past_1,
             due_date=date_past_2
-        )
+            )
 
         todo_present=models.Todo.objects.create(
             name='todo test present',
-            by=user_jscob,
             description=description,
             start_date=date_now,
             due_date=date_future_1
-        )
+            )
 
         todo_future=models.Todo.objects.create(
             name='todo test future',
-            by=user_jscob,
             description=description,
             start_date=date_future_1,
             due_date=date_future_2
-        )
+            )
 
 
         from django.test import Client
         client = Client(headers={"user-agent": "curl/7.79.1"})
 
 
-        url_present='/todo/{}'.format(todo_present.id)
+        url_present='/todo/{}/'.format(todo_present.id)
         response_present = client.get(path=url_present)
 
         self.assertEqual(
@@ -485,15 +435,15 @@ class BlogTestCase(TestCase):
                 url_present
             )
         )
-
+        
         self.assertEqual(
-            first=response_present.json(),
+            first=response_present.json()['data'],
             second=todo_present.export_to_response,
             msg="TEST 50: todo get detail is wrong."
         )
 
 
-        url_past='/todo/{}'.format(todo_past.id)
+        url_past='/todo/{}/'.format(todo_past.id)
         response_past = client.get(path=url_past)
 
         self.assertEqual(
@@ -507,13 +457,13 @@ class BlogTestCase(TestCase):
         )
 
         self.assertEqual(
-            first=response_past.json(),
+            first=response_past.json()['data'],
             second=todo_past.export_to_response,
             msg="TEST 52: todo get detail is wrong."
         )
 
 
-        url_future='/todo/{}'.format(todo_future.id)
+        url_future='/todo/{}/'.format(todo_future.id)
         response_future = client.get(path=url_future)
 
         self.assertEqual(
@@ -527,7 +477,7 @@ class BlogTestCase(TestCase):
         )
 
         self.assertEqual(
-            first=response_future.json(),
+            first=response_future.json()['data'],
             second=todo_future.export_to_response,
             msg="TEST 54: todo get detail is wrong."
         )
@@ -538,7 +488,6 @@ class BlogTestCase(TestCase):
 
     def test_todo_post_APIs(self):
 
-        user_jscob=User.objects.get(username='_test__jscob')
         description='some text to test description'
         from django.utils import timezone
         from datetime import timedelta
@@ -551,7 +500,6 @@ class BlogTestCase(TestCase):
 
         data_present={
             "name":"create Todo in POST API",
-            "by":user_jscob.id,
             "description":description,
             "start_date":"{} {}".format(date_past.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
             "due_date":"{} {}".format(date_future.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
@@ -559,7 +507,6 @@ class BlogTestCase(TestCase):
 
         post_url='/todo/'
         response_present = client.post(path=post_url,data=data_present,content_type='application/json',)
-
         self.assertEqual(
             first=response_present.status_code,
             second=200,
@@ -570,7 +517,7 @@ class BlogTestCase(TestCase):
             )
         )
 
-        response_data=response_present.json()
+        response_data=response_present.json()['data']
 
         self.assertEqual(
             first=response_data.get('name'),
@@ -596,26 +543,18 @@ class BlogTestCase(TestCase):
             msg='TEST 59: posted data is not equal to saved data with field {}'.format('due_date')
         )
 
-        self.assertEqual(
-            first=response_data.get('by')['id'],
-            second=data_present[user_jscob.id],
-            msg='TEST 60: posted data is not equal to saved data with field {}'.format('by')
-        )
-
     def test_todo_put_APIs(self):
         new_description='some text to test description 2'
         from django.utils import timezone
         from datetime import timedelta
         new_date_future=timezone.now()+timedelta(days=5)
         new_date_past=timezone.now()-timedelta(days=10)
-        user_jscob=User.objects.get(username='_test__jscob')
         description='some text to test description'
         date_past_1=timezone.now()-timedelta(days=10)
         date_past_2=timezone.now()-timedelta(days=15)
 
         todo_past=models.Todo.objects.create(
             name='Create todo to test put',
-            by=user_jscob,
             description=description,
             start_date=date_past_1,
             due_date=date_past_2
@@ -625,7 +564,7 @@ class BlogTestCase(TestCase):
         client = Client(headers={"user-agent": "curl/7.79.1"})
 
         data_present={
-            "escription":new_description,
+            "description":new_description,
             "start_date":"{} {}".format(new_date_future.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
             "due_date":"{} {}".format(new_date_past.strftime("%d/%m/%Y %H:%M:%S"),"UTC"),
         }
@@ -645,7 +584,7 @@ class BlogTestCase(TestCase):
             )
         )
 
-        response_data=response_present.json()
+        response_data=response_present.json()['data']
 
         self.assertEqual(
             first=response_data.get('description'),
@@ -671,14 +610,12 @@ class BlogTestCase(TestCase):
 
         from django.utils import timezone
         from datetime import timedelta
-        user_jscob=User.objects.get(username='_test__jscob')
         description='some text to test description'
         date_past_1=timezone.now()-timedelta(days=10)
         date_past_2=timezone.now()-timedelta(days=15)
 
         todo_past=models.Todo.objects.create(
             name='Create todo to test delete',
-            by=user_jscob,
             description=description,
             start_date=date_past_1,
             due_date=date_past_2
