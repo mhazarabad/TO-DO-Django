@@ -35,7 +35,7 @@ class DateTimeTranslatorMixin:
         from pytz import timezone
         
         if len(datetime_string.split(' '))!=3:
-            raise Exception("datetime string format is not valid, sample: '14/5/2022 12:15:23 utc'")
+            raise Exception("datetime string format is not valid, should be: 'D/M/Y H:M:S tz', sample: '14/5/2022 12:15:23 utc'")
         date_string,time_string,timezone_string=datetime_string.split(' ')
 
         date_string=date_string.split('/')
@@ -139,5 +139,5 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
         verbose_name_plural='ToDos'
     
     def __str__(self) -> str:
-        return '{} - {}'.format(self.user.username,self.name[:20])
+        return '{}'.format(self.name[:20])
     

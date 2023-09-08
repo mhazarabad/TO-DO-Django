@@ -13,7 +13,6 @@ def Get_Json_Data_From_API(request,keyword,on_error_value,part='body'):
 def Blog_Manager(request,todo_id:str=None):
     from django.http.response import JsonResponse
     from .models import Todo
-    print(request.method,todo_id)
     match (request.method, todo_id):
         case ('GET',None):
             page=request.GET.get('page',1)
@@ -29,7 +28,7 @@ def Blog_Manager(request,todo_id:str=None):
                 return JsonResponse(data={"description":"todo not found"},status=404)# not found
             except Exception as e:
                 # send error to montiro center or add an issue to github
-                return JsonResponse(data={},status=500)
+                return JsonResponse(data={'description':'error','msg':str(e)},status=500)
         case ('POST',None):
             new_todo_name=Get_Json_Data_From_API(request=request,keyword='name',on_error_value=None)
             new_todo_description=Get_Json_Data_From_API(request=request,keyword='description',on_error_value=None)
@@ -39,15 +38,18 @@ def Blog_Manager(request,todo_id:str=None):
 
             if new_todo_name==None:
                 return JsonResponse(data={"description":"Field {} is not optional".format("name")},status=400)
-            try:
-                new_todo_start_date_datetime_obj=new_todo_start_date if new_todo_start_date==None else Todo.create_datetime_object_from_string(datetime_string=new_todo_start_date)
-            except Exception as e:
-                return JsonResponse(data={"description":"Error in {}: {}".format("start_date field",str(e))},status=400)
             
-            try:
-                new_todo_due_date_datetime_obj=new_todo_due_date if new_todo_due_date==None else Todo.create_datetime_object_from_string(datetime_string=new_todo_due_date)
-            except Exception as e:
-                return JsonResponse(data={"description":"Error in {}: {}".format("due_date field",str(e))},status=400)
+            if new_todo_start_date:
+                try:
+                    new_todo_start_date_datetime_obj=None if new_todo_start_date=='' else Todo.create_datetime_object_from_string(datetime_string=new_todo_start_date)
+                except Exception as e:
+                    return JsonResponse(data={"description":"Error in {}: {}".format("start_date field",str(e))},status=400)
+            
+            if new_todo_due_date:
+                try:
+                    new_todo_due_date_datetime_obj=None if new_todo_due_date=='' else Todo.create_datetime_object_from_string(datetime_string=new_todo_due_date)
+                except Exception as e:
+                    return JsonResponse(data={"description":"Error in {}: {}".format("due_date field",str(e))},status=400)
 
             try:
                 new_todo=Todo.objects.create(
@@ -69,6 +71,12 @@ def Blog_Manager(request,todo_id:str=None):
             todo_new_due_date=Get_Json_Data_From_API(request=request,keyword='due_date',on_error_value=None)
             todo_new_status=Get_Json_Data_From_API(request=request,keyword='status',on_error_value=None)
 
+            if len(str(todo_new_start_date))<5:
+                todo_new_start_date=None
+
+            if len(str(todo_new_due_date))<5:
+                todo_new_due_date=None
+
             if todo_id == None:
                 return JsonResponse(data={"description":"todo id is not optional"},status=400)
             
@@ -79,7 +87,7 @@ def Blog_Manager(request,todo_id:str=None):
                 return JsonResponse(data={"description":"todo not found"})
             except Exception as e:
                 # send error to montiro center or add an issue to github
-                return JsonResponse(data={},status=500)
+                return JsonResponse(data={'description':'error','msg':str(e)},status=500)
 
             todo_got_new_data=False
 
@@ -131,7 +139,7 @@ def Blog_Manager(request,todo_id:str=None):
                 return JsonResponse(data={"description":"todo not found"})
             except Exception as e:
                 # send error to montiro center or add an issue to github
-                return JsonResponse(data={},status=500)
+                return JsonResponse(data={'description':'error','msg':str(e)},status=500)
             
             try:
                 todo.delete()
