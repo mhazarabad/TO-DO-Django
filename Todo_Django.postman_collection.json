@@ -1,0 +1,181 @@
+{
+	"info": {
+		"_postman_id": "d4b539b9-ce8b-44bd-b046-0524276b2faa",
+		"name": "Todo_Django",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4169789"
+	},
+	"item": [
+		{
+			"name": "todo_app",
+			"item": [
+				{
+					"name": "Get all todo",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/todo/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"todo",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add todo",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"\",\r\n    \"description\":\"\",\r\n    \"start_date\":\"\",\r\n    \"due_date\":\"\",\r\n    \"status\":\"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/todo/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"todo",
+								""
+							]
+						},
+						"description": "name (mandatory):\n\nname field can be any string up to 100 chars\n\ndescription (optional):\n\ndescription field is an optional field that can hold any string without limitation in numbers of characters\n\nstart_date (optional):\n\nstart date field is designed to hold the start date time of a todo if any in \"D/M/Y H:M:S tz\" format\n\ndue_date (optional):\n\ndue date field is designed to hold the deadline of a todo if any in \"D/M/Y H:M:S tz\" format\n\nstatus (optional):\n\nstatus indicates the status of todo and it can be '1' -> 'todo' , '2' -> 'inprogress' and '3' -> 'done'. by default this value considered as '1'"
+					},
+					"response": []
+				},
+				{
+					"name": "edit todo",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/todo/{{todo id}}/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"todo",
+								"{{todo id}}",
+								""
+							]
+						},
+						"description": "partial edit is allowed"
+					},
+					"response": []
+				},
+				{
+					"name": "get specific todo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/todo/{{todo id}}/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"todo",
+								"{{todo id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete a todo",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/todo/{{todo id}}/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"todo",
+								"{{todo id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "todo id",
+			"value": "c0a73a2a-2ad3-476a-9a45-326346dd5463",
+			"type": "string"
+		}
+	]
+}
