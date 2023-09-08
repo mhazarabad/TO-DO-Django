@@ -92,6 +92,7 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
     start_date=models.DateTimeField(blank=True,null=True)
     due_date=models.DateTimeField(blank=True,null=True)
 
+
     @classmethod
     def filter_query_with_paginator(cls,page:int=1,result_per_page:int=9,**kwargs):
         page=page if page>=1 else 1
@@ -101,6 +102,19 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
         max_page=total_pages if total_result_number%result_per_page == 0 else total_pages+1
         page=max_page if page>max_page else page
         return cls.objects.filter(**kwargs)[(page-1)*result_per_page:page*result_per_page],max_page
+
+    def _display_start_date_for_admin(self):
+        return DateTimeTranslatorMixin.export_to_visible_datetime(time_object=self.start_date) if self.start_date else '-'
+    _display_start_date_for_admin.short_description = 'start date'
+
+    def _display_due_date_for_admin(self):
+        return DateTimeTranslatorMixin.export_to_visible_datetime(time_object=self.due_date) if self.due_date else '-'
+    _display_due_date_for_admin.short_description = 'due date'
+
+    @classmethod
+    def filter_missed_start_todo(cls,**kwargs):
+        from django.utils import timezone
+        return cls.objects.filter(start_date__lte=timezone.now(),status__in=['1'],**kwargs).order_by('start_date')
 
     @classmethod
     def sort_todo_by_closer_due_date(cls,**kwargs):
@@ -113,7 +127,7 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
     @classmethod
     def sort_todo_by_passed_deadline(cls,**kwargs):
         from django.utils import timezone
-        return cls.objects.filter(due_date__lte=timezone.now(),status__in=['1','2']).filter(**kwargs).order_by('due_date')
+        return cls.objects.filter(due_date__lte=timezone.now(),status__in=['1','2'],**kwargs).order_by('due_date')
 
     @property
     def export_to_response(self):
