@@ -10,7 +10,7 @@ def Get_Json_Data_From_API(request,keyword,on_error_value,part='body'):
         variable=on_error_value
     return variable
 
-def Blog_Manager(request,todo_id:str=None):
+def Todo_Manager(request,todo_id:str=None):
     from django.http.response import JsonResponse
     from .models import Todo
     match (request.method, todo_id):
