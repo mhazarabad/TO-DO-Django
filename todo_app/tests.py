@@ -1,7 +1,7 @@
 from django.test import TestCase
 from . import models
 
-class BlogTestCase(TestCase):
+class TodoTestCase(TestCase):
     def setUp(self):
         pass
 
