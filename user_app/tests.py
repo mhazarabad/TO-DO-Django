@@ -134,8 +134,8 @@ class UserTestCase(TestCase):
 
         self.assertEqual(
             first=response_data.get('data',{}).get('username'),
-            second=edit_user_data.username,
-            msg='error in response put- username must be {} but is {}'.format(edit_user_data.username,response_data.get('data',{}).get('username'))
+            second=edit_user_data['username'],
+            msg='error in response put- username must be {} but is {}'.format(edit_user_data['username'],response_data.get('data',{}).get('username'))
         )
 
         self.assertEqual(
@@ -146,13 +146,13 @@ class UserTestCase(TestCase):
 
         self.assertEqual(
             first=response_data.get('data',{}).get('last_name'),
-            second=edit_user_data.last_name,
-            msg='error in response put- last_name must be {} but is {}'.format(edit_user_data.last_name,response_data.get('data',{}).get('last_name'))
+            second=edit_user_data['last_name'],
+            msg='error in response put- last_name must be {} but is {}'.format(edit_user_data['last_name'],response_data.get('data',{}).get('last_name'))
         )
 
         self.assertNotEqual(
             first=response_data.get('data',{}).get('id'),
-            second=edit_user_data.id,
+            second=edit_user_data['id'],
             msg='error in response put- id for user should not be change'
         )
 
