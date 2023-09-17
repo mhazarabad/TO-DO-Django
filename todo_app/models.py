@@ -75,6 +75,18 @@ class CommonFieldsAbs(models.Model):
     creation_datetime=models.DateTimeField(auto_now_add=True,editable=False)
     last_update_datetime=models.DateTimeField(auto_now=True,editable=False)
     from django.contrib.auth.models import User
+    by=models.ForeignKey(to=User,on_delete=models.SET_NULL,blank=True,null=True,related_name='by')
+
+    @staticmethod
+    def export_user_to_response(user_object:User) -> dict:
+        if user_object == None:
+            return None
+        return {
+            "id":user_object.pk,
+            "first_name":user_object.first_name,
+            "last_name":user_object.last_name,
+            "username":user_object.username
+        }
 
     class Meta:
         ordering=('-last_update_datetime',)
@@ -91,6 +103,8 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
     status=models.CharField(max_length=1,choices=STATUS_CHOICES,default='1')
     start_date=models.DateTimeField(blank=True,null=True)
     due_date=models.DateTimeField(blank=True,null=True)
+    from django.contrib.auth.models import User
+    assign=models.ForeignKey(to=User,on_delete=models.SET_NULL,blank=True,null=True,related_name='assign')
 
 
     @classmethod
@@ -139,8 +153,10 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
             "status_verbose":self.get_status_display(),
             "start_date":DateTimeTranslatorMixin.export_to_visible_datetime(time_object=self.start_date) if self.start_date else None,
             "due_date":DateTimeTranslatorMixin.export_to_visible_datetime(time_object=self.due_date) if self.due_date else None,
+            "assign":self.export_user_to_response(user_object=self.assign) if self.assign else None,
             "creation_datetime":DateTimeTranslatorMixin.export_to_visible_datetime(time_object=self.creation_datetime),
             "last_update_datetime":DateTimeTranslatorMixin.export_to_visible_datetime(time_object=self.last_update_datetime),
+            "by":self.export_user_to_response(user_object=self.by) if self.by else None,
         }
 
     @property
