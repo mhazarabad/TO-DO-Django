@@ -1,9 +1,14 @@
 from django.test import TestCase
 from . import models
+from django.contrib.auth.models import User
 
 class TodoTestCase(TestCase):
     def setUp(self):
-        pass
+        user_1=User.objects.create(
+            username='user_1',
+            first_name='user 1 first name',
+            last_name='user 1 last name',
+        )
 
     def test_create_edit_delete_todo(self):
 
@@ -256,6 +261,14 @@ class TodoTestCase(TestCase):
             msg='TEST 37: todo due date must be {} but it is {}'.format(new_due_date, todo_with_due_date.due_date)
             )
 
+        user_1=User.objects.get(username='user_1')
+        todo_with_description.assign=user_1
+        todo_with_description.save()
+        self.assertEqual(
+            first=todo_with_description.export_to_response['assign'],
+            second=models.Todo.export_user_to_response(user_object=user_1),
+            msg='TEST 67: editing todo - assign a user to todo failed'
+        )
 
         #### testing deleting objectts
         # instruction:
