@@ -1,3 +1,6 @@
+MINIMUM_USER_USERNAME_LENGTH=4
+MINIMUM_USER_PASSWORD_LENGTH=8
+
 def Get_Json_Data_From_API(request,keyword,on_error_value,part='body'):
     from json import loads as From_Json
     try:
@@ -156,5 +159,72 @@ def User_Manager(request,user_username:str=None):
             except Exception as e:
                 return JsonResponse(data={"description":"error in deleting user: {}".format(str(e))},status=500)
         case (_,_):
-            return JsonResponse(data={"description":"method not allowed"},status=403)
-                
+            return JsonResponse(data={"description":"method not allowed"},status=405)
+
+def Token_Manager(request):
+    from django.http.response import JsonResponse
+    from django.core.exceptions import ObjectDoesNotExist
+
+    match request.method.lower():
+        case 'post':
+            user_username=Get_Json_Data_From_API(request=request,keyword='username',on_error_value=None)
+            user_password=Get_Json_Data_From_API(request=request,keyword='password',on_error_value=None)
+
+            if user_username:
+                user_username=str(user_username)
+
+            if not user_username or len(user_username)<MINIMUM_USER_USERNAME_LENGTH:
+                return JsonResponse(data={"description":"username length can not be less than {}".format(MINIMUM_USER_USERNAME_LENGTH)},status=400)
+
+            if user_password:
+                user_password=str(user_password)
+
+            if not user_password or len(user_password)<MINIMUM_USER_PASSWORD_LENGTH:
+                return JsonResponse(data={"description":"password length can not be less than {}".format(MINIMUM_USER_PASSWORD_LENGTH)},status=400)
+
+            from .models import UserToken
+
+            try:
+                user=UserToken.get_user_from_username_password(user_username=user_username,user_password=user_password)
+                if user==None:
+                    return JsonResponse(data={"description":"username or password is incorrect"},status=403)
+            except Exception as e:
+                return JsonResponse(data={"description":"error in checking user creadentials: {}".format(str(e))},status=500)
+            
+            try:
+                new_token=UserToken.get_new_token(user=user)
+            except Exception as e:
+                return JsonResponse(data={"description":"error in creating new token"},status=500)
+
+            return JsonResponse(data={"description":"ok","token":str(new_token)},status=200)
+        
+        case 'delete':
+            user_token=Get_Json_Data_From_API(request=request,keyword='Authorization',on_error_value=None,part='header')
+
+            if user_token:
+                user_token=str(user_token)
+
+            user_token=user_token.split(' ')
+
+            if 'bearer' != user_token[0].lower() or len(user_token)!=2:
+                return JsonResponse(data={"description":"token format is not valid. valid format is: 'Bearer <your token>'"},status=403)
+            
+            user_token=str(user_token[1])
+
+            from .models import UserToken
+            try:
+                user=UserToken.get_user_from_token(token=user_token)
+                if user==None:
+                    return JsonResponse(data={'description':'invalid token or token is not valid'},status=403)
+            except Exception as e:
+                return JsonResponse(data={"description":"error in checking token"},status=500)
+            
+            try:
+                UserToken.logout_token(user=user)
+            except Exception as e:
+                return JsonResponse(data={"description":"error in removing token"},status=500)
+            
+            return JsonResponse(data={"description":"ok"},status=200)
+
+        case _:
+            return JsonResponse(data={"description":"method not allowed"},status=405)
