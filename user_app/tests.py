@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
+from .models import UserToken
 
 
 class UserTestCase(TestCase):
@@ -177,3 +178,78 @@ class UserTestCase(TestCase):
             second=False,
             msg='delete request did not delete the object'
         )
+
+    def test_user_token_model(self):
+        user=User.objects.get(username='user_1')
+        user_token=None
+        error=None
+        try:
+            user_token=UserToken.get_new_token(user=user)
+        except Exception as e:
+            error=str(e)
+
+        self.assertNotEqual(
+            first=user_token,
+            second=None,
+            msg='error in geting new token: {}'.format(error)
+        )
+
+        retrive_user=None
+        error=None
+        try:
+            retrive_user=UserToken.get_user_from_token(token=user_token)
+        except Exception as e:
+            error=str(e)
+
+        self.assertEqual(
+            first=retrive_user,
+            second=user,
+            msg='error in retriving user from token: {}'.format(error)
+        )
+
+    def test_token_manager_API(self):
+        from django.test import Client
+        client = Client(headers={"user-agent": "curl/7.79.1"})
+
+        from django.contrib.auth.hashers import make_password
+        user_token_manager_password='1,2,3,4,5,6,7'
+        user_token_manager=User.objects.create(username='user_token_manager',password=make_password(user_token_manager_password))
+        
+        
+        token_manager_url = '/user/token_manager/'
+
+        get_new_token_response = client.post(
+            path=token_manager_url, content_type='application/json',data={"username":"user_token_manager","password":user_token_manager_password})
+        
+        self.assertEqual(
+            first=get_new_token_response.status_code,
+            second=200,
+            msg='status code for getting new token is not 200, is: {}'.format(get_new_token_response.status_code)
+        )
+
+        response_data=get_new_token_response.json()
+        desierd_token=str(UserToken.objects.get(user=user_token_manager,is_valid=True).token)
+
+        self.assertEqual(
+            first=desierd_token,
+            second=response_data.get('token'),
+            msg='error in getting new token, token must be {} but is {}'.format(desierd_token,response_data.get('token'))
+        )
+
+        client = Client(headers={"user-agent": "curl/7.79.1","Authorization":"Bearer {}".format(desierd_token)})
+        get_delete_token_response = client.delete(
+            path=token_manager_url, content_type='application/json',)
+        
+        self.assertEqual(
+            first=get_delete_token_response.status_code,
+            second=200,
+            msg='status code for deleting token is not 200, is: {}'.format(get_delete_token_response.status_code)
+        )
+
+        self.assertEqual(
+            first=UserToken.objects.filter(user=user_token_manager,is_valid=True).exists(),
+            second=False,
+            msg='user token is valid but it should not'
+        )
+        
+
