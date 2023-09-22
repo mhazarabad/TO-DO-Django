@@ -10,11 +10,20 @@ class TodoTestCase(TestCase):
             last_name='user 1 last name',
         )
 
+        user_5=User.objects.create(
+            username='user_5',
+            first_name='user 5 first name',
+            last_name='user 5 last name',
+        )
+
     def test_create_edit_delete_todo(self):
 
+        user_1=User.objects.get(username='user_1')
+        user_5=User.objects.get(username='user_5')
 
         todo_without_optionals=models.Todo.objects.create(
             name='todo test 1',
+            by=user_5
             )
         
         self.assertEqual(
@@ -64,7 +73,8 @@ class TodoTestCase(TestCase):
 
         todo_with_description=models.Todo.objects.create(
             name='todo test 2',
-            description=description
+            description=description,
+            by=user_5
         )
 
         self.assertEqual(
@@ -117,7 +127,8 @@ class TodoTestCase(TestCase):
             name='todo test 3',
             status='2',
             description=description,
-            due_date=due_date
+            due_date=due_date,
+            by=user_5
         )
 
         self.assertEqual(
@@ -169,7 +180,8 @@ class TodoTestCase(TestCase):
             name='todo test 4',
             status='3',
             description=description,
-            start_date=start_date
+            start_date=start_date,
+            by=user_5
         )
 
         self.assertEqual(
@@ -342,25 +354,31 @@ class TodoTestCase(TestCase):
         date_past_1=timezone.now()-timedelta(days=10)
         date_past_2=timezone.now()-timedelta(days=15)
 
+        user_1=User.objects.get(username='user_1')
+        user_5=User.objects.get(username='user_5')
+
         todo_past=models.Todo.objects.create(
             name='todo test past',
             description=description,
             start_date=date_past_1,
-            due_date=date_past_2
+            due_date=date_past_2,
+            by=user_5
         )
 
         todo_present=models.Todo.objects.create(
             name='todo test present',
             description=description,
             start_date=date_now,
-            due_date=date_future_1
+            due_date=date_future_1,
+            by=user_5
         )
 
         todo_future=models.Todo.objects.create(
             name='todo test future',
             description=description,
             start_date=date_future_1,
-            due_date=date_future_2
+            due_date=date_future_2,
+            by=user_5
         )
 
         #### test sort_todo_by_closer_due_date
@@ -410,30 +428,39 @@ class TodoTestCase(TestCase):
         date_past_1=timezone.now()-timedelta(days=10)
         date_past_2=timezone.now()-timedelta(days=15)
 
+        user_5=User.objects.get(username='user_5')
+
+        from user_app.models import UserToken
+        token_user_5=str(UserToken.objects.create(user=user_5,is_valid=True).token)
+        
+
         todo_past=models.Todo.objects.create(
             name='todo test past',
             description=description,
             start_date=date_past_1,
-            due_date=date_past_2
+            due_date=date_past_2,
+            by=user_5
             )
 
         todo_present=models.Todo.objects.create(
             name='todo test present',
             description=description,
             start_date=date_now,
-            due_date=date_future_1
+            due_date=date_future_1,
+            by=user_5
             )
 
         todo_future=models.Todo.objects.create(
             name='todo test future',
             description=description,
             start_date=date_future_1,
-            due_date=date_future_2
+            due_date=date_future_2,
+            by=user_5
             )
 
 
         from django.test import Client
-        client = Client(headers={"user-agent": "curl/7.79.1"})
+        client = Client(headers={"user-agent": "curl/7.79.1","Authorization":"Bearer {}".format(token_user_5)})
 
 
         url_present='/todo/{}/'.format(todo_present.id)
@@ -507,9 +534,13 @@ class TodoTestCase(TestCase):
         date_future=timezone.now()+timedelta(days=5)
         date_past=timezone.now()-timedelta(days=10)
 
+        user_5=User.objects.get(username='user_5')
+        from user_app.models import UserToken
+        token_user_5=str(UserToken.objects.create(user=user_5,is_valid=True).token)
+
 
         from django.test import Client
-        client = Client(headers={"user-agent": "curl/7.79.1"})
+        client = Client(headers={"user-agent": "curl/7.79.1","Authorization":"Bearer {}".format(token_user_5)})
 
         data_present={
             "name":"create Todo in POST API",
@@ -566,15 +597,20 @@ class TodoTestCase(TestCase):
         date_past_1=timezone.now()-timedelta(days=10)
         date_past_2=timezone.now()-timedelta(days=15)
 
+        user_5=User.objects.get(username='user_5')
+        from user_app.models import UserToken
+        token_user_5=str(UserToken.objects.create(user=user_5,is_valid=True).token)
+
         todo_past=models.Todo.objects.create(
             name='Create todo to test put',
             description=description,
             start_date=date_past_1,
-            due_date=date_past_2
+            due_date=date_past_2,
+            by=user_5
         )
 
         from django.test import Client
-        client = Client(headers={"user-agent": "curl/7.79.1"})
+        client = Client(headers={"user-agent": "curl/7.79.1","Authorization":"Bearer {}".format(token_user_5)})
 
         data_present={
             "description":new_description,
@@ -618,8 +654,13 @@ class TodoTestCase(TestCase):
         )
 
     def test_todo_delete_APIs(self):
+        user_5=User.objects.get(username='user_5')
+        from user_app.models import UserToken
+        token_user_5=str(UserToken.objects.create(user=user_5,is_valid=True).token)
+
+
         from django.test import Client
-        client = Client(headers={"user-agent": "curl/7.79.1"})
+        client = Client(headers={"user-agent": "curl/7.79.1","Authorization":"Bearer {}".format(token_user_5)})
 
         from django.utils import timezone
         from datetime import timedelta
@@ -631,7 +672,8 @@ class TodoTestCase(TestCase):
             name='Create todo to test delete',
             description=description,
             start_date=date_past_1,
-            due_date=date_past_2
+            due_date=date_past_2,
+            by=user_5
         )
 
         todo=models.Todo.objects.get(name="Create todo to test delete")

@@ -106,16 +106,25 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
     from django.contrib.auth.models import User
     assign=models.ForeignKey(to=User,on_delete=models.SET_NULL,blank=True,null=True,related_name='assign')
 
+    from django.db.models import QuerySet
 
-    @classmethod
-    def filter_query_with_paginator(cls,page:int=1,result_per_page:int=9,**kwargs):
+    @staticmethod
+    def query_paginator(query:QuerySet,page:int=1,result_per_page:int=9) -> (QuerySet,int):
         page=page if page>=1 else 1
-        total_result_number=cls.objects.all().count()
+        total_result_number=len(query)
         total_pages=total_result_number//result_per_page
         total_pages=total_pages if total_pages>0 else 1
         max_page=total_pages if total_result_number%result_per_page == 0 else total_pages+1
         page=max_page if page>max_page else page
-        return cls.objects.filter(**kwargs)[(page-1)*result_per_page:page*result_per_page],max_page
+        return query[(page-1)*result_per_page:page*result_per_page],max_page
+    
+    @classmethod
+    def filter_related_user_todo(cls,user:User) -> QuerySet:
+        from django.db.models import Q
+        by_q=Q(by=user)
+        assign_q=Q(assign=user)
+        query=cls.objects.filter(by_q|assign_q)
+        return query
 
     def _display_start_date_for_admin(self):
         return DateTimeTranslatorMixin.export_to_visible_datetime(time_object=self.start_date) if self.start_date else '-'
@@ -126,20 +135,20 @@ class Todo(CommonFieldsAbs,TodoStatusTranslatorMixin,DateTimeTranslatorMixin):
     _display_due_date_for_admin.short_description = 'due date'
 
     @classmethod
-    def filter_missed_start_todo(cls,**kwargs):
+    def filter_missed_start_todo(cls,**kwargs) -> QuerySet:
         from django.utils import timezone
         return cls.objects.filter(start_date__lte=timezone.now(),status__in=['1'],**kwargs).order_by('start_date')
 
     @classmethod
-    def sort_todo_by_closer_due_date(cls,**kwargs):
+    def sort_todo_by_closer_due_date(cls,**kwargs) -> QuerySet:
         return cls.objects.filter(**kwargs).order_by('due_date')
     
     @classmethod
-    def sort_todo_by_closer_start_date(cls,**kwargs):
+    def sort_todo_by_closer_start_date(cls,**kwargs) -> QuerySet:
         return cls.objects.filter(**kwargs).order_by('start_date')
     
     @classmethod
-    def sort_todo_by_passed_deadline(cls,**kwargs):
+    def sort_todo_by_passed_deadline(cls,**kwargs) -> QuerySet:
         from django.utils import timezone
         return cls.objects.filter(due_date__lte=timezone.now(),status__in=['1','2'],**kwargs).order_by('due_date')
 
