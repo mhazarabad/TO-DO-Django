@@ -4,6 +4,6 @@ from . import views
 
 app_name = "todo_app"
 urlpatterns = [
-    path(route='<str:todo_id>/',view=csrf_exempt(views.Blog_Manager),name='todo_manager'),
-    path(route='',view=csrf_exempt(views.Blog_Manager)),
+    path(route='<str:todo_id>/',view=csrf_exempt(views.Todo_Manager),name='todo_manager'),
+    path(route='',view=csrf_exempt(views.Todo_Manager)),
 ]

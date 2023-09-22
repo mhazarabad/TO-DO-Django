@@ -10,13 +10,46 @@ def Get_Json_Data_From_API(request,keyword,on_error_value,part='body'):
         variable=on_error_value
     return variable
 
-def Blog_Manager(request,todo_id:str=None):
+def Extract_Token_From_Request(request) -> str:
+    user_token=Get_Json_Data_From_API(request=request,keyword='Authorization',on_error_value=None,part='header')
+
+    if user_token:
+        user_token=str(user_token)
+
+    user_token=user_token.split(' ')
+
+    if 'bearer' != user_token[0].lower() or len(user_token)!=2:
+        raise Exception("token format is not valid. valid format is: 'Bearer <your token>'")
+    
+    user_token=str(user_token[1])
+
+    return user_token
+
+def Todo_Manager(request,todo_id:str=None):
     from django.http.response import JsonResponse
     from .models import Todo
+
+    from user_app.models import UserToken
+
+    try:
+        user_token=Extract_Token_From_Request(request=request)
+    except Exception as e:
+        return JsonResponse(data={"description":str(e)},status=400)
+
+    try:
+        authenticated_user=UserToken.get_user_from_token(token=user_token)
+    except Exception as e:
+        return JsonResponse(data={"description":"error in getting user: {}".format(str(e))},status=500)
+    
+    if authenticated_user==None:
+        return JsonResponse(data={"description":"token is not authenticated"},status=403)
+
+
     match (request.method, todo_id):
         case ('GET',None):
             page=request.GET.get('page',1)
-            todo_list,max_page=Todo.filter_query_with_paginator(page=page)
+            todo_list=Todo.filter_related_user_todo(user=authenticated_user)
+            todo_list,max_page=Todo.query_paginator(query=todo_list,page=page)
             return JsonResponse(data={"page":page,"data":[todo.export_to_response for todo in todo_list],"max_page":max_page})
         case ('GET',_):
             from django.core.exceptions import ObjectDoesNotExist
@@ -57,7 +90,8 @@ def Blog_Manager(request,todo_id:str=None):
                     description=str(new_todo_description),
                     start_date=new_todo_start_date_datetime_obj,
                     due_date=new_todo_due_date_datetime_obj,
-                    status=Todo.get_status_id(unknown_status=new_todo_status,status_choices=Todo.STATUS_CHOICES)
+                    status=Todo.get_status_id(unknown_status=new_todo_status,status_choices=Todo.STATUS_CHOICES),
+                    by=authenticated_user
                 )
             except Exception as e:
                 return JsonResponse(data={"description":"Error in saving Todo: {}".format(str(e))},status=400)
@@ -82,7 +116,7 @@ def Blog_Manager(request,todo_id:str=None):
             
             from django.core.exceptions import ObjectDoesNotExist
             try:
-                todo=Todo.objects.get(id=todo_id)
+                todo=Todo.filter_related_user_todo(user=authenticated_user).get(id=todo_id)
             except ObjectDoesNotExist:
                 return JsonResponse(data={"description":"todo not found"})
             except Exception as e:
@@ -134,7 +168,7 @@ def Blog_Manager(request,todo_id:str=None):
             
             from django.core.exceptions import ObjectDoesNotExist
             try:
-                todo=Todo.objects.get(id=todo_id)
+                todo=Todo.filter_related_user_todo(user=authenticated_user).get(id=todo_id)
             except ObjectDoesNotExist:
                 return JsonResponse(data={"description":"todo not found"})
             except Exception as e:
