@@ -15,6 +15,8 @@ def Extract_Token_From_Request(request) -> str:
 
     if user_token:
         user_token=str(user_token)
+    else:
+        raise Exception("token not found")
 
     user_token=user_token.split(' ')
 
@@ -34,7 +36,7 @@ def Todo_Manager(request,todo_id:str=None):
     try:
         user_token=Extract_Token_From_Request(request=request)
     except Exception as e:
-        return JsonResponse(data={"description":str(e)},status=400)
+        return JsonResponse(data={"description":str(e)},status=403)
 
     try:
         authenticated_user=UserToken.get_user_from_token(token=user_token)
