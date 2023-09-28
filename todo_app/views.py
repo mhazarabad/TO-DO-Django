@@ -74,12 +74,14 @@ def Todo_Manager(request,todo_id:str=None):
             if new_todo_name==None:
                 return JsonResponse(data={"description":"Field {} is not optional".format("name")},status=400)
             
+            new_todo_start_date_datetime_obj=None
             if new_todo_start_date:
                 try:
                     new_todo_start_date_datetime_obj=None if new_todo_start_date=='' else Todo.create_datetime_object_from_string(datetime_string=new_todo_start_date)
                 except Exception as e:
                     return JsonResponse(data={"description":"Error in {}: {}".format("start_date field",str(e))},status=400)
             
+            new_todo_due_date_datetime_obj=None
             if new_todo_due_date:
                 try:
                     new_todo_due_date_datetime_obj=None if new_todo_due_date=='' else Todo.create_datetime_object_from_string(datetime_string=new_todo_due_date)
@@ -139,6 +141,7 @@ def Todo_Manager(request,todo_id:str=None):
                 todo.status=Todo.get_status_id(unknown_status=todo_new_status,status_choices=Todo.STATUS_CHOICES)
                 todo_got_new_data=True
 
+            todo_new_start_date_datetime_object=None
             if todo_new_start_date!=None:
                 try:
                     todo_new_start_date_datetime_object=Todo.create_datetime_object_from_string(datetime_string=todo_new_start_date)
@@ -147,6 +150,7 @@ def Todo_Manager(request,todo_id:str=None):
                 todo.start_date=todo_new_start_date_datetime_object
                 todo_got_new_data=True
 
+            todo_new_due_date_datetime_object=None
             if todo_new_due_date!=None:
                 try:
                     todo_new_due_date_datetime_object=Todo.create_datetime_object_from_string(datetime_string=todo_new_due_date)
