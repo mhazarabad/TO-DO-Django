@@ -88,6 +88,9 @@ def Todo_Manager(request,todo_id:str=None):
                 except Exception as e:
                     return JsonResponse(data={"description":"Error in {}: {}".format("due_date field",str(e))},status=400)
 
+            if len(str(new_todo_status))==0:
+                new_todo_status='1'
+
             try:
                 new_todo=Todo.objects.create(
                     name=str(new_todo_name)[:100],
@@ -136,6 +139,9 @@ def Todo_Manager(request,todo_id:str=None):
             if todo_new_description!=None:
                 todo.description=str(todo_new_description)
                 todo_got_new_data=True
+
+            if len(str(todo_new_status))==0:
+                todo_new_status=None
 
             if todo_new_status:
                 todo.status=Todo.get_status_id(unknown_status=todo_new_status,status_choices=Todo.STATUS_CHOICES)
