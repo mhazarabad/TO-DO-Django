@@ -7,3 +7,4 @@ boto3
 pillow
 pypng
 persiantools
+django-cors-headers
